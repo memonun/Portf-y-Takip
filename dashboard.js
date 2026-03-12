@@ -503,6 +503,202 @@ app.post('/api/send-snapshot', async (_req, res) => {
   }
 })
 
+// ============ Price Alert Notifications ============
+
+// Cooldown tracking: prevents duplicate alerts within a time window
+// Key: "SYMBOL_ALERTTYPE" → Value: timestamp of last sent alert
+const alertCooldowns = new Map()
+const ALERT_COOLDOWN_MS = 60 * 60 * 1000 // 1 hour cooldown per alert type per stock
+
+function isOnCooldown(key) {
+  const last = alertCooldowns.get(key)
+  if (!last) return false
+  return (Date.now() - last) < ALERT_COOLDOWN_MS
+}
+
+function markSent(key) {
+  alertCooldowns.set(key, Date.now())
+}
+
+// Tolerance for "equals" checks — price within 0.5% of a level counts as hitting it
+const TIER_TOLERANCE = 0.005
+
+function checkAlerts(data) {
+  const alerts = []
+
+  for (const d of data) {
+    if (!d.price || !d.peak) continue
+
+    const { symbol, price, peak, tier1, tier2, tier3, target1, target2 } = d
+
+    // --- Peak tier alerts: price at -5%, -8%, -12% from peak ---
+    const tierChecks = [
+      { level: tier1, pct: 5, key: `${symbol}_TIER_5` },
+      { level: tier2, pct: 8, key: `${symbol}_TIER_8` },
+      { level: tier3, pct: 12, key: `${symbol}_TIER_12` },
+    ]
+
+    for (const tc of tierChecks) {
+      if (tc.level == null) continue
+      const diff = Math.abs(price - tc.level) / tc.level
+      if (diff <= TIER_TOLERANCE && !isOnCooldown(tc.key)) {
+        alerts.push({
+          symbol,
+          type: 'peak_tier',
+          message: `${symbol} current price ₺${fmtNum(price)} is at ${tc.pct}% down from peak ₺${fmtNum(peak)}`,
+          color: tc.pct === 5 ? '#d29922' : tc.pct === 8 ? '#e3872d' : '#f85149',
+          icon: '🔻',
+          key: tc.key,
+        })
+      }
+    }
+
+    // --- Target proximity alerts ---
+    const targetChecks = [
+      { target: target1, label: 'Target 1' },
+      { target: target2, label: 'Target 2' },
+    ]
+
+    for (const tc of targetChecks) {
+      if (!tc.target) continue
+      const pctToTarget = ((tc.target - price) / price) * 100
+
+      // Price reached or exceeded target
+      const reachedKey = `${symbol}_${tc.label}_REACHED`
+      if (pctToTarget <= 0 && !isOnCooldown(reachedKey)) {
+        alerts.push({
+          symbol,
+          type: 'target_reached',
+          message: `${symbol} has reached ${tc.label} at ₺${fmtNum(tc.target)} — current price ₺${fmtNum(price)}`,
+          color: '#2ea043',
+          icon: '🎯',
+          key: reachedKey,
+        })
+        continue // skip proximity checks if already reached
+      }
+
+      // Within 2% of target
+      const close2Key = `${symbol}_${tc.label}_2PCT`
+      if (pctToTarget > 0 && pctToTarget <= 2 && !isOnCooldown(close2Key)) {
+        alerts.push({
+          symbol,
+          type: 'target_close',
+          message: `${symbol} is within 2% of ${tc.label} ₺${fmtNum(tc.target)} — current price ₺${fmtNum(price)}`,
+          color: '#d29922',
+          icon: '🔔',
+          key: close2Key,
+        })
+      }
+      // Within 5% of target (but not within 2%)
+      else {
+        const close5Key = `${symbol}_${tc.label}_5PCT`
+        if (pctToTarget > 2 && pctToTarget <= 5 && !isOnCooldown(close5Key)) {
+          alerts.push({
+            symbol,
+            type: 'target_near',
+            message: `${symbol} is within 5% of ${tc.label} ₺${fmtNum(tc.target)} — current price ₺${fmtNum(price)}`,
+            color: '#58a6ff',
+            icon: '📡',
+            key: close5Key,
+          })
+        }
+      }
+    }
+  }
+
+  return alerts
+}
+
+function buildAlertEmail(alerts) {
+  const date = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const time = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+
+  const rows = alerts.map(a => `
+    <tr style="border-bottom:1px solid #21262d;">
+      <td style="padding:14px 16px;font-size:22px;width:40px;text-align:center;">${a.icon}</td>
+      <td style="padding:14px 16px;">
+        <div style="color:${a.color};font-weight:600;font-size:14px;margin-bottom:2px;">${a.symbol}</div>
+        <div style="color:#c9d1d9;font-size:13px;">${a.message}</div>
+      </td>
+    </tr>`).join('')
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#0d1117;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:24px;">
+    <div style="background:linear-gradient(135deg,#161b22,#1c2333);border-radius:12px;border:1px solid #30363d;overflow:hidden;">
+      <div style="padding:20px 24px;border-bottom:1px solid #30363d;">
+        <h1 style="margin:0;color:#e6edf3;font-size:18px;">Price Alert</h1>
+        <p style="margin:4px 0 0;color:#8b949e;font-size:12px;">${date} — ${time}</p>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">${rows}</table>
+      <div style="padding:14px 24px;border-top:1px solid #30363d;text-align:center;">
+        <p style="margin:0;color:#484f58;font-size:10px;">StableX Insights — BIST Peak Tracker</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
+async function sendAlertEmail(alerts) {
+  if (!mailTransport || alerts.length === 0) return
+
+  const userId = await getDefaultUserId()
+  const { data: user } = await supabase.from('users').select('email').eq('id', userId).single()
+  const toEmail = user?.email || GMAIL_USER
+
+  const html = buildAlertEmail(alerts)
+  const symbols = [...new Set(alerts.map(a => a.symbol))].join(', ')
+
+  try {
+    await mailTransport.sendMail({
+      from: `StableX Alerts <${GMAIL_USER}>`,
+      to: toEmail,
+      subject: `Price Alert — ${symbols}`,
+      html,
+    })
+
+    // Mark all alerts as sent
+    for (const a of alerts) markSent(a.key)
+    console.log(`  Alert email sent to ${toEmail}: ${alerts.length} alert(s) for ${symbols}`)
+  } catch (err) {
+    console.error('  Alert email failed:', err.message)
+  }
+}
+
+// Periodic alert check — runs every 2 minutes alongside the pg_cron refresh
+async function runAlertCheck() {
+  try {
+    const data = await getDashboardData()
+    const alerts = checkAlerts(data)
+    if (alerts.length > 0) {
+      console.log(`  Found ${alerts.length} alert(s):`, alerts.map(a => a.message).join(' | '))
+      await sendAlertEmail(alerts)
+    }
+  } catch (err) {
+    console.error('  Alert check error:', err.message)
+  }
+}
+
+// Start alert loop after server is ready (2-min interval to match pg_cron)
+const ALERT_INTERVAL_MS = 2 * 60 * 1000
+let alertTimer = null
+
+function startAlertLoop() {
+  if (!mailTransport) {
+    console.log('  Alerts disabled — GMAIL_USER / GMAIL_APP_PASSWORD not set')
+    return
+  }
+  console.log('  Price alert notifications enabled (checking every 2 min)')
+  // Run first check after a short delay (let pg_cron populate fresh data first)
+  setTimeout(() => {
+    runAlertCheck()
+    alertTimer = setInterval(runAlertCheck, ALERT_INTERVAL_MS)
+  }, 10_000)
+}
+
 // ============ HTML Dashboard ============
 
 app.get('/', (_req, res) => {
@@ -990,6 +1186,7 @@ async function startServer() {
     console.log(`  ║   http://localhost:${PORT}              ║`)
     console.log('  ╚═══════════════════════════════════════╝')
     console.log('')
+    startAlertLoop()
   })
 }
 
