@@ -520,8 +520,9 @@ function markSent(key) {
   alertCooldowns.set(key, Date.now())
 }
 
-// Tolerance for "equals" checks — price within 0.5% of a level counts as hitting it
-const TIER_TOLERANCE = 0.005
+// Previous prices for delta/crossing detection
+// Key: symbol → Value: last known price
+const previousPrices = new Map()
 
 function checkAlerts(data) {
   const alerts = []
@@ -530,8 +531,9 @@ function checkAlerts(data) {
     if (!d.price || !d.peak) continue
 
     const { symbol, price, peak, tier1, tier2, tier3, target1, target2 } = d
+    const prevPrice = previousPrices.get(symbol)
 
-    // --- Peak tier alerts: price at -5%, -8%, -12% from peak ---
+    // --- Peak tier alerts: price crossed below or is at -5%, -8%, -12% from peak ---
     const tierChecks = [
       { level: tier1, pct: 5, key: `${symbol}_TIER_5` },
       { level: tier2, pct: 8, key: `${symbol}_TIER_8` },
@@ -540,12 +542,19 @@ function checkAlerts(data) {
 
     for (const tc of tierChecks) {
       if (tc.level == null) continue
-      const diff = Math.abs(price - tc.level) / tc.level
-      if (diff <= TIER_TOLERANCE && !isOnCooldown(tc.key)) {
+      // Trigger if price crossed below the tier (was above, now at or below)
+      // or if there's no previous price and current is at or below the tier
+      const crossedBelow = prevPrice != null
+        ? prevPrice > tc.level && price <= tc.level
+        : false
+      const isAtLevel = Math.abs(price - tc.level) / tc.level <= 0.005
+
+      if ((crossedBelow || isAtLevel) && !isOnCooldown(tc.key)) {
+        const verb = crossedBelow ? 'dropped to' : 'is at'
         alerts.push({
           symbol,
           type: 'peak_tier',
-          message: `${symbol} current price ₺${fmtNum(price)} is at ${tc.pct}% down from peak ₺${fmtNum(peak)}`,
+          message: `${symbol} ${verb} ${tc.pct}% below peak — price ₺${fmtNum(price)} (peak ₺${fmtNum(peak)})`,
           color: tc.pct === 5 ? '#d29922' : tc.pct === 8 ? '#e3872d' : '#f85149',
           icon: '🔻',
           key: tc.key,
@@ -553,7 +562,7 @@ function checkAlerts(data) {
       }
     }
 
-    // --- Target proximity alerts ---
+    // --- Target proximity and reached alerts ---
     const targetChecks = [
       { target: target1, label: 'Target 1' },
       { target: target2, label: 'Target 2' },
@@ -562,14 +571,18 @@ function checkAlerts(data) {
     for (const tc of targetChecks) {
       if (!tc.target) continue
       const pctToTarget = ((tc.target - price) / price) * 100
+      const prevPctToTarget = prevPrice ? ((tc.target - prevPrice) / prevPrice) * 100 : null
 
-      // Price reached or exceeded target
+      // Price reached or crossed above target
       const reachedKey = `${symbol}_${tc.label}_REACHED`
-      if (pctToTarget <= 0 && !isOnCooldown(reachedKey)) {
+      const crossedAbove = prevPrice != null
+        ? prevPrice < tc.target && price >= tc.target
+        : false
+      if ((crossedAbove || pctToTarget <= 0) && !isOnCooldown(reachedKey)) {
         alerts.push({
           symbol,
           type: 'target_reached',
-          message: `${symbol} has reached ${tc.label} at ₺${fmtNum(tc.target)} — current price ₺${fmtNum(price)}`,
+          message: `${symbol} has reached ${tc.label} at ₺${fmtNum(tc.target)} — price ₺${fmtNum(price)}`,
           color: '#2ea043',
           icon: '🎯',
           key: reachedKey,
@@ -577,26 +590,34 @@ function checkAlerts(data) {
         continue // skip proximity checks if already reached
       }
 
-      // Within 2% of target
+      // Crossed into 2% zone (was >2% away, now <=2%)
       const close2Key = `${symbol}_${tc.label}_2PCT`
-      if (pctToTarget > 0 && pctToTarget <= 2 && !isOnCooldown(close2Key)) {
+      const enteredZone2 = prevPctToTarget != null
+        ? prevPctToTarget > 2 && pctToTarget > 0 && pctToTarget <= 2
+        : false
+      const isInZone2 = pctToTarget > 0 && pctToTarget <= 2
+      if ((enteredZone2 || isInZone2) && !isOnCooldown(close2Key)) {
         alerts.push({
           symbol,
           type: 'target_close',
-          message: `${symbol} is within 2% of ${tc.label} ₺${fmtNum(tc.target)} — current price ₺${fmtNum(price)}`,
+          message: `${symbol} is within 2% of ${tc.label} ₺${fmtNum(tc.target)} — price ₺${fmtNum(price)}`,
           color: '#d29922',
           icon: '🔔',
           key: close2Key,
         })
       }
-      // Within 5% of target (but not within 2%)
+      // Crossed into 5% zone (was >5% away, now <=5% but >2%)
       else {
         const close5Key = `${symbol}_${tc.label}_5PCT`
-        if (pctToTarget > 2 && pctToTarget <= 5 && !isOnCooldown(close5Key)) {
+        const enteredZone5 = prevPctToTarget != null
+          ? prevPctToTarget > 5 && pctToTarget > 2 && pctToTarget <= 5
+          : false
+        const isInZone5 = pctToTarget > 2 && pctToTarget <= 5
+        if ((enteredZone5 || isInZone5) && !isOnCooldown(close5Key)) {
           alerts.push({
             symbol,
             type: 'target_near',
-            message: `${symbol} is within 5% of ${tc.label} ₺${fmtNum(tc.target)} — current price ₺${fmtNum(price)}`,
+            message: `${symbol} is within 5% of ${tc.label} ₺${fmtNum(tc.target)} — price ₺${fmtNum(price)}`,
             color: '#58a6ff',
             icon: '📡',
             key: close5Key,
@@ -604,6 +625,9 @@ function checkAlerts(data) {
         }
       }
     }
+
+    // Store current price for next cycle's delta comparison
+    previousPrices.set(symbol, price)
   }
 
   return alerts
