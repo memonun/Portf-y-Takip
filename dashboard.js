@@ -543,13 +543,14 @@ function checkAlerts(data) {
     for (const tc of tierChecks) {
       if (tc.level == null) continue
       // Trigger if price crossed below the tier (was above, now at or below)
-      // or if there's no previous price and current is at or below the tier
       const crossedBelow = prevPrice != null
         ? prevPrice > tc.level && price <= tc.level
         : false
+      // First run after deploy: catch if already at or below the tier
+      const firstRunBelow = prevPrice == null && price <= tc.level
       const isAtLevel = Math.abs(price - tc.level) / tc.level <= 0.005
 
-      if ((crossedBelow || isAtLevel) && !isOnCooldown(tc.key)) {
+      if ((crossedBelow || firstRunBelow || isAtLevel) && !isOnCooldown(tc.key)) {
         const verb = crossedBelow ? 'dropped to' : 'is at'
         alerts.push({
           symbol,
