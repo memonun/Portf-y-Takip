@@ -711,8 +711,8 @@ const ALERT_INTERVAL_MS = 2 * 60 * 1000
 let alertTimer = null
 
 function startAlertLoop() {
-  if (!mailTransport) {
-    console.log('  Alerts disabled — GMAIL_USER / GMAIL_APP_PASSWORD not set')
+  if (!resend) {
+    console.log('  Alerts disabled — RESEND_API_KEY not set')
     return
   }
   console.log('  Price alert notifications enabled (checking every 2 min)')
