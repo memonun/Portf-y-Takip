@@ -12,7 +12,7 @@
 
 import express from 'express'
 import ExcelJS from 'exceljs'
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 import { supabase, getDefaultUserId, todayStr, formatDate, EDGE_FUNCTION_URL } from './lib/supabase.js'
 
 const PORT = process.env.PORT || process.env.BIST_PORT || 3737
@@ -398,15 +398,10 @@ app.get('/api/export-excel', async (_req, res) => {
 
 // ============ Email Snapshot ============
 
-const GMAIL_USER = process.env.GMAIL_USER
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD
+const RESEND_API_KEY = process.env.RESEND_API_KEY
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'StableX Insights <onboarding@resend.dev>'
 
-const mailTransport = GMAIL_USER && GMAIL_APP_PASSWORD
-  ? nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
-    })
-  : null
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null
 
 function fmtNum(v) {
   if (v == null) return '-'
@@ -480,7 +475,7 @@ function buildSnapshotEmail(data) {
 }
 
 app.post('/api/send-snapshot', async (_req, res) => {
-  if (!mailTransport) return res.status(500).json({ error: 'GMAIL_USER / GMAIL_APP_PASSWORD not configured in .env' })
+  if (!resend) return res.status(500).json({ error: 'RESEND_API_KEY not configured' })
   try {
     const data = await getDashboardData()
     if (!data.length) return res.status(400).json({ error: 'No stocks in portfolio' })
@@ -488,16 +483,18 @@ app.post('/api/send-snapshot', async (_req, res) => {
     const html = buildSnapshotEmail(data)
     const userId = await getDefaultUserId()
     const { data: user } = await supabase.from('users').select('email').eq('id', userId).single()
-    const toEmail = user?.email || GMAIL_USER
+    const toEmail = user?.email
+    if (!toEmail) return res.status(400).json({ error: 'No email found for user' })
 
-    const info = await mailTransport.sendMail({
-      from: `StableX Insights <${GMAIL_USER}>`,
+    const { data: emailData, error } = await resend.emails.send({
+      from: RESEND_FROM_EMAIL,
       to: toEmail,
       subject: `BIST Portfolio Snapshot — ${todayStr()}`,
       html,
     })
+    if (error) throw new Error(error.message)
 
-    res.json({ ok: true, messageId: info.messageId, to: toEmail })
+    res.json({ ok: true, messageId: emailData.id, to: toEmail })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -668,22 +665,24 @@ function buildAlertEmail(alerts) {
 }
 
 async function sendAlertEmail(alerts) {
-  if (!mailTransport || alerts.length === 0) return
+  if (!resend || alerts.length === 0) return
 
   const userId = await getDefaultUserId()
   const { data: user } = await supabase.from('users').select('email').eq('id', userId).single()
-  const toEmail = user?.email || GMAIL_USER
+  const toEmail = user?.email
+  if (!toEmail) return
 
   const html = buildAlertEmail(alerts)
   const symbols = [...new Set(alerts.map(a => a.symbol))].join(', ')
 
   try {
-    await mailTransport.sendMail({
-      from: `StableX Alerts <${GMAIL_USER}>`,
+    const { error } = await resend.emails.send({
+      from: RESEND_FROM_EMAIL,
       to: toEmail,
       subject: `Price Alert — ${symbols}`,
       html,
     })
+    if (error) throw new Error(error.message)
 
     // Mark all alerts as sent
     for (const a of alerts) markSent(a.key)

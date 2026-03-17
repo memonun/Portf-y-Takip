@@ -21,7 +21,7 @@
     "dotenv": "^16.3.1",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
-    "nodemailer": "^8.0.1"
+    "resend": "^6.9.4"
   },
   "engines": {
     "node": ">=18.0.0"
