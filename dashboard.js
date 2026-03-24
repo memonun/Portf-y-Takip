@@ -833,14 +833,14 @@ const HTML = /*html*/ `<!DOCTYPE html>
       <tr>
         <th>Sembol</th>
         <th>Fiyat (&#8378;)</th>
-        <th>Maliyet (&#8378;)</th>
-        <th>Hedef 1 (&#8378;)</th>
-        <th>Hedef 2 (&#8378;)</th>
         <th>Pik (&#8378;)</th>
         <th>% Pikten</th>
         <th>T1 -%5 (&#8378;)</th>
         <th>T2 -%8 (&#8378;)</th>
         <th>T3 -%12 (&#8378;)</th>
+        <th>Maliyet (&#8378;)</th>
+        <th>Hedef 1 (&#8378;)</th>
+        <th>Hedef 2 (&#8378;)</th>
       </tr>
     </thead>
     <tbody id="peakBody">
