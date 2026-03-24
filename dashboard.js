@@ -426,12 +426,14 @@ function buildSnapshotEmail(data) {
     return `<tr style="background:${rowBg};border-bottom:1px solid #e8e8e8;">
       <td style="padding:10px 14px;font-weight:700;font-size:13px;letter-spacing:0.04em;">${d.symbol}</td>
       <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;">₺${fmtNum(d.price)}</td>
-      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;">${d.cost ? '₺' + fmtNum(d.cost) : '-'}${costPnlStr ? '<br><span style="font-size:11px;color:#555;">' + costPnlStr + '</span>' : ''}</td>
       <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;">${d.peak != null ? '₺' + fmtNum(d.peak) : '-'}</td>
       <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;font-weight:${pctPeakWeight};">${pctPeak}</td>
       <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;color:#555;">${d.tier1 != null ? '₺' + fmtNum(d.tier1) : '-'}</td>
       <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;color:#555;">${d.tier2 != null ? '₺' + fmtNum(d.tier2) : '-'}</td>
       <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;color:#555;">${d.tier3 != null ? '₺' + fmtNum(d.tier3) : '-'}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;">${d.cost ? '₺' + fmtNum(d.cost) : '-'}${costPnlStr ? '<br><span style="font-size:11px;color:#555;">' + costPnlStr + '</span>' : ''}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;color:#555;">${d.target1 != null ? '₺' + fmtNum(d.target1) : '-'}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;color:#555;">${d.target2 != null ? '₺' + fmtNum(d.target2) : '-'}</td>
     </tr>`
   }).join('')
 
@@ -452,12 +454,14 @@ function buildSnapshotEmail(data) {
             <tr style="background:#000;">
               <th style="padding:9px 14px;text-align:left;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Symbol</th>
               <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Price</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Cost</th>
               <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Peak</th>
               <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">% Peak</th>
               <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T1 −5%</th>
               <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T2 −8%</th>
               <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T3 −12%</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Cost</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Target 1</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Target 2</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
