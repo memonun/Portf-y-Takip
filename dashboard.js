@@ -412,61 +412,59 @@ function buildSnapshotEmail(data) {
   const date = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
   const time = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
 
-  const rows = data.map(d => {
-    const pctPeak = d.pctFromPeak != null ? d.pctFromPeak.toFixed(2) + '%' : '-'
-    const pctPeakColor = d.pctFromPeak == null ? '#8b949e'
-      : d.pctFromPeak >= 0 ? '#2ea043'
-      : d.pctFromPeak > -5 ? '#d29922'
-      : d.pctFromPeak > -8 ? '#e3872d'
-      : '#f85149'
+  const rows = data.map((d, i) => {
+    const pctPeak = d.pctFromPeak != null
+      ? (d.pctFromPeak >= 0 ? '+' : '') + d.pctFromPeak.toFixed(2) + '%'
+      : '-'
+    const pctPeakWeight = d.pctFromPeak != null && d.pctFromPeak >= 0 ? '700' : '400'
 
-    const costPnl = d.cost && d.price
-      ? ((d.price - d.cost) / d.cost * 100)
-      : null
+    const costPnl = d.cost && d.price ? ((d.price - d.cost) / d.cost * 100) : null
     const costPnlStr = costPnl != null ? (costPnl >= 0 ? '+' : '') + costPnl.toFixed(2) + '%' : ''
-    const costPnlColor = costPnl != null ? (costPnl >= 0 ? '#2ea043' : '#f85149') : '#8b949e'
 
-    return `<tr style="border-bottom:1px solid #21262d;">
-      <td style="padding:10px 12px;font-weight:600;color:#58a6ff;">${d.symbol}</td>
-      <td style="padding:10px 12px;text-align:right;">₺${fmtNum(d.price)}</td>
-      <td style="padding:10px 12px;text-align:right;">${d.cost ? '₺' + fmtNum(d.cost) : '-'}${costPnlStr ? ' <span style="color:' + costPnlColor + ';font-size:11px;">(' + costPnlStr + ')</span>' : ''}</td>
-      <td style="padding:10px 12px;text-align:right;">${d.peak != null ? '₺' + fmtNum(d.peak) : '-'}</td>
-      <td style="padding:10px 12px;text-align:right;color:${pctPeakColor};font-weight:600;">${pctPeak}</td>
-      <td style="padding:10px 12px;text-align:right;">${d.tier1 != null ? '₺' + fmtNum(d.tier1) : '-'}</td>
-      <td style="padding:10px 12px;text-align:right;">${d.tier2 != null ? '₺' + fmtNum(d.tier2) : '-'}</td>
-      <td style="padding:10px 12px;text-align:right;">${d.tier3 != null ? '₺' + fmtNum(d.tier3) : '-'}</td>
+    const rowBg = i % 2 === 0 ? '#ffffff' : '#f7f7f7'
+
+    return `<tr style="background:${rowBg};border-bottom:1px solid #e8e8e8;">
+      <td style="padding:10px 14px;font-weight:700;font-size:13px;letter-spacing:0.04em;">${d.symbol}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;">₺${fmtNum(d.price)}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;">${d.cost ? '₺' + fmtNum(d.cost) : '-'}${costPnlStr ? '<br><span style="font-size:11px;color:#555;">' + costPnlStr + '</span>' : ''}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;">${d.peak != null ? '₺' + fmtNum(d.peak) : '-'}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;font-weight:${pctPeakWeight};">${pctPeak}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;color:#555;">${d.tier1 != null ? '₺' + fmtNum(d.tier1) : '-'}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;color:#555;">${d.tier2 != null ? '₺' + fmtNum(d.tier2) : '-'}</td>
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:13px;color:#555;">${d.tier3 != null ? '₺' + fmtNum(d.tier3) : '-'}</td>
     </tr>`
   }).join('')
 
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"/></head>
-<body style="margin:0;padding:0;background:#0d1117;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <div style="max-width:720px;margin:0 auto;padding:24px;">
-    <div style="background:linear-gradient(135deg,#161b22,#1c2333);border-radius:12px;border:1px solid #30363d;overflow:hidden;">
-      <div style="padding:24px 28px;border-bottom:1px solid #30363d;">
-        <h1 style="margin:0;color:#e6edf3;font-size:20px;">📊 BIST Portfolio Snapshot</h1>
-        <p style="margin:6px 0 0;color:#8b949e;font-size:13px;">${date} — ${time}</p>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:720px;margin:0 auto;padding:32px 16px;">
+    <div style="background:#ffffff;border:1px solid #d0d0d0;">
+      <div style="padding:24px 28px;border-bottom:2px solid #000;">
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin-bottom:6px;">StableX Insights</div>
+        <h1 style="margin:0;color:#000;font-size:22px;font-weight:700;letter-spacing:-0.02em;">Portfolio Snapshot</h1>
+        <p style="margin:6px 0 0;color:#555;font-size:12px;">${date} — ${time}</p>
       </div>
-      <div style="padding:0;">
-        <table style="width:100%;border-collapse:collapse;color:#e6edf3;font-size:13px;">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;color:#000;font-size:13px;">
           <thead>
-            <tr style="background:#21262d;">
-              <th style="padding:10px 12px;text-align:left;color:#8b949e;font-weight:500;font-size:11px;text-transform:uppercase;">Symbol</th>
-              <th style="padding:10px 12px;text-align:right;color:#8b949e;font-weight:500;font-size:11px;text-transform:uppercase;">Price</th>
-              <th style="padding:10px 12px;text-align:right;color:#8b949e;font-weight:500;font-size:11px;text-transform:uppercase;">Cost</th>
-              <th style="padding:10px 12px;text-align:right;color:#8b949e;font-weight:500;font-size:11px;text-transform:uppercase;">Peak</th>
-              <th style="padding:10px 12px;text-align:right;color:#8b949e;font-weight:500;font-size:11px;text-transform:uppercase;">% Peak</th>
-              <th style="padding:10px 12px;text-align:right;color:#8b949e;font-weight:500;font-size:11px;text-transform:uppercase;">T1 -5%</th>
-              <th style="padding:10px 12px;text-align:right;color:#8b949e;font-weight:500;font-size:11px;text-transform:uppercase;">T2 -8%</th>
-              <th style="padding:10px 12px;text-align:right;color:#8b949e;font-weight:500;font-size:11px;text-transform:uppercase;">T3 -12%</th>
+            <tr style="background:#000;">
+              <th style="padding:9px 14px;text-align:left;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Symbol</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Price</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Cost</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Peak</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">% Peak</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T1 −5%</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T2 −8%</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T3 −12%</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <div style="padding:16px 28px;border-top:1px solid #30363d;text-align:center;">
-        <p style="margin:0;color:#484f58;font-size:11px;">StableX Insights — BIST Peak Tracker</p>
+      <div style="padding:14px 28px;border-top:1px solid #e0e0e0;">
+        <p style="margin:0;color:#aaa;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;">BIST Peak Tracker</p>
       </div>
     </div>
   </div>
@@ -481,20 +479,19 @@ app.post('/api/send-snapshot', async (_req, res) => {
     if (!data.length) return res.status(400).json({ error: 'No stocks in portfolio' })
 
     const html = buildSnapshotEmail(data)
-    const userId = await getDefaultUserId()
-    const { data: user } = await supabase.from('users').select('email').eq('id', userId).single()
-    const toEmail = user?.email
-    if (!toEmail) return res.status(400).json({ error: 'No email found for user' })
+    const { data: users } = await supabase.from('users').select('email')
+    const toEmails = users?.map(u => u.email).filter(Boolean) ?? []
+    if (toEmails.length === 0) return res.status(400).json({ error: 'No email found for any user' })
 
     const { data: emailData, error } = await resend.emails.send({
       from: RESEND_FROM_EMAIL,
-      to: toEmail,
+      to: toEmails,
       subject: `BIST Portfolio Snapshot — ${todayStr()}`,
       html,
     })
     if (error) throw new Error(error.message)
 
-    res.json({ ok: true, messageId: emailData.id, to: toEmail })
+    res.json({ ok: true, messageId: emailData.id, to: toEmails })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -636,27 +633,28 @@ function buildAlertEmail(alerts) {
   const time = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
 
   const rows = alerts.map(a => `
-    <tr style="border-bottom:1px solid #21262d;">
-      <td style="padding:14px 16px;font-size:22px;width:40px;text-align:center;">${a.icon}</td>
-      <td style="padding:14px 16px;">
-        <div style="color:${a.color};font-weight:600;font-size:14px;margin-bottom:2px;">${a.symbol}</div>
-        <div style="color:#c9d1d9;font-size:13px;">${a.message}</div>
+    <tr style="border-bottom:1px solid #e8e8e8;">
+      <td style="padding:16px 14px;font-size:20px;width:36px;vertical-align:top;text-align:center;">${a.icon}</td>
+      <td style="padding:16px 14px 16px 4px;vertical-align:top;">
+        <div style="font-weight:700;font-size:13px;letter-spacing:0.06em;margin-bottom:4px;">${a.symbol}</div>
+        <div style="color:#333;font-size:13px;line-height:1.5;">${a.message}</div>
       </td>
     </tr>`).join('')
 
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"/></head>
-<body style="margin:0;padding:0;background:#0d1117;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:24px;">
-    <div style="background:linear-gradient(135deg,#161b22,#1c2333);border-radius:12px;border:1px solid #30363d;overflow:hidden;">
-      <div style="padding:20px 24px;border-bottom:1px solid #30363d;">
-        <h1 style="margin:0;color:#e6edf3;font-size:18px;">Price Alert</h1>
-        <p style="margin:4px 0 0;color:#8b949e;font-size:12px;">${date} — ${time}</p>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;padding:32px 16px;">
+    <div style="background:#ffffff;border:1px solid #d0d0d0;">
+      <div style="padding:20px 24px;border-bottom:2px solid #000;">
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin-bottom:6px;">StableX Insights</div>
+        <h1 style="margin:0;color:#000;font-size:20px;font-weight:700;letter-spacing:-0.02em;">Price Alert</h1>
+        <p style="margin:4px 0 0;color:#555;font-size:12px;">${date} — ${time}</p>
       </div>
       <table style="width:100%;border-collapse:collapse;">${rows}</table>
-      <div style="padding:14px 24px;border-top:1px solid #30363d;text-align:center;">
-        <p style="margin:0;color:#484f58;font-size:10px;">StableX Insights — BIST Peak Tracker</p>
+      <div style="padding:12px 24px;border-top:1px solid #e0e0e0;">
+        <p style="margin:0;color:#aaa;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;">BIST Peak Tracker</p>
       </div>
     </div>
   </div>
@@ -667,10 +665,9 @@ function buildAlertEmail(alerts) {
 async function sendAlertEmail(alerts) {
   if (!resend || alerts.length === 0) return
 
-  const userId = await getDefaultUserId()
-  const { data: user } = await supabase.from('users').select('email').eq('id', userId).single()
-  const toEmail = user?.email
-  if (!toEmail) return
+  const { data: users } = await supabase.from('users').select('email')
+  const toEmails = users?.map(u => u.email).filter(Boolean) ?? []
+  if (toEmails.length === 0) return
 
   const html = buildAlertEmail(alerts)
   const symbols = [...new Set(alerts.map(a => a.symbol))].join(', ')
@@ -678,7 +675,7 @@ async function sendAlertEmail(alerts) {
   try {
     const { error } = await resend.emails.send({
       from: RESEND_FROM_EMAIL,
-      to: toEmail,
+      to: toEmails,
       subject: `Price Alert — ${symbols}`,
       html,
     })
@@ -686,7 +683,7 @@ async function sendAlertEmail(alerts) {
 
     // Mark all alerts as sent
     for (const a of alerts) markSent(a.key)
-    console.log(`  Alert email sent to ${toEmail}: ${alerts.length} alert(s) for ${symbols}`)
+    console.log(`  Alert email sent to ${toEmails.join(', ')}: ${alerts.length} alert(s) for ${symbols}`)
   } catch (err) {
     console.error('  Alert email failed:', err.message)
   }
