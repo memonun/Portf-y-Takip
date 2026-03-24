@@ -247,7 +247,7 @@ app.post('/api/update-peaks', async (_req, res) => {
 app.post('/api/add-stock', async (req, res) => {
   try {
     const { symbol } = req.body
-    if (!symbol) return res.status(400).json({ error: 'symbol is required' })
+    if (!symbol) return res.status(400).json({ error: 'sembol gereklidir' })
 
     const sym = symbol.toUpperCase().replace('.IS', '')
     const userId = await getDefaultUserId()
@@ -262,7 +262,7 @@ app.post('/api/add-stock', async (req, res) => {
       .limit(1)
 
     if (existing && existing.length > 0) {
-      return res.json({ ok: true, message: 'Stock already in portfolio' })
+      return res.json({ ok: true, message: 'Hisse zaten portföyde' })
     }
 
     // Ensure stock_quotes row exists
@@ -290,8 +290,8 @@ app.post('/api/add-stock', async (req, res) => {
 app.post('/api/position', async (req, res) => {
   try {
     const { portfolio_stock_id, open_date, cost, target1, target2 } = req.body
-    if (!portfolio_stock_id) return res.status(400).json({ error: 'portfolio_stock_id is required' })
-    if (!open_date || cost == null) return res.status(400).json({ error: 'open_date and cost are required' })
+    if (!portfolio_stock_id) return res.status(400).json({ error: 'portfolio_stock_id gereklidir' })
+    if (!open_date || cost == null) return res.status(400).json({ error: 'open_date ve cost gereklidir' })
 
     const { error } = await supabase.from('positions').insert({
       portfolio_stock_id, open_date, cost,
@@ -445,23 +445,23 @@ function buildSnapshotEmail(data) {
     <div style="background:#ffffff;border:1px solid #d0d0d0;">
       <div style="padding:24px 28px;border-bottom:2px solid #000;">
         <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin-bottom:6px;">StableX Insights</div>
-        <h1 style="margin:0;color:#000;font-size:22px;font-weight:700;letter-spacing:-0.02em;">Portfolio Snapshot</h1>
+        <h1 style="margin:0;color:#000;font-size:22px;font-weight:700;letter-spacing:-0.02em;">Portföy Özeti</h1>
         <p style="margin:6px 0 0;color:#555;font-size:12px;">${date} — ${time}</p>
       </div>
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;color:#000;font-size:13px;">
           <thead>
             <tr style="background:#000;">
-              <th style="padding:9px 14px;text-align:left;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Symbol</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Price</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Peak</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">% Peak</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T1 −5%</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T2 −8%</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T3 −12%</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Cost</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Target 1</th>
-              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Target 2</th>
+              <th style="padding:9px 14px;text-align:left;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Sembol</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Fiyat</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Pik</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">% Pik</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T1 −%5</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T2 −%8</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">T3 −%12</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Maliyet</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Hedef 1</th>
+              <th style="padding:9px 14px;text-align:right;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;">Hedef 2</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -480,17 +480,17 @@ app.post('/api/send-snapshot', async (_req, res) => {
   if (!resend) return res.status(500).json({ error: 'RESEND_API_KEY not configured' })
   try {
     const data = await getDashboardData()
-    if (!data.length) return res.status(400).json({ error: 'No stocks in portfolio' })
+    if (!data.length) return res.status(400).json({ error: 'Portföyde hisse yok' })
 
     const html = buildSnapshotEmail(data)
     const { data: users } = await supabase.from('users').select('email')
     const toEmails = users?.map(u => u.email).filter(Boolean) ?? []
-    if (toEmails.length === 0) return res.status(400).json({ error: 'No email found for any user' })
+    if (toEmails.length === 0) return res.status(400).json({ error: 'Hiçbir kullanıcı için e-posta bulunamadı' })
 
     const { data: emailData, error } = await resend.emails.send({
       from: RESEND_FROM_EMAIL,
       to: toEmails,
-      subject: `BIST Portfolio Snapshot — ${todayStr()}`,
+      subject: `BIST Portföy Özeti — ${todayStr()}`,
       html,
     })
     if (error) throw new Error(error.message)
@@ -549,11 +549,11 @@ function checkAlerts(data) {
       const isAtLevel = Math.abs(price - tc.level) / tc.level <= 0.005
 
       if ((crossedBelow || firstRunBelow || isAtLevel) && !isOnCooldown(tc.key)) {
-        const verb = crossedBelow ? 'dropped to' : 'is at'
+        const verb = crossedBelow ? 'düştü' : 'şu anda'
         alerts.push({
           symbol,
           type: 'peak_tier',
-          message: `${symbol} ${verb} ${tc.pct}% below peak — price ₺${fmtNum(price)} (peak ₺${fmtNum(peak)})`,
+          message: `${symbol} pik fiyatının %${tc.pct} altına ${verb} — fiyat ₺${fmtNum(price)} (pik ₺${fmtNum(peak)})`,
           color: tc.pct === 5 ? '#d29922' : tc.pct === 8 ? '#e3872d' : '#f85149',
           icon: '🔻',
           key: tc.key,
@@ -563,8 +563,8 @@ function checkAlerts(data) {
 
     // --- Target proximity and reached alerts ---
     const targetChecks = [
-      { target: target1, label: 'Target 1' },
-      { target: target2, label: 'Target 2' },
+      { target: target1, label: 'Hedef 1' },
+      { target: target2, label: 'Hedef 2' },
     ]
 
     for (const tc of targetChecks) {
@@ -581,7 +581,7 @@ function checkAlerts(data) {
         alerts.push({
           symbol,
           type: 'target_reached',
-          message: `${symbol} has reached ${tc.label} at ₺${fmtNum(tc.target)} — price ₺${fmtNum(price)}`,
+          message: `${symbol} ${tc.label} hedefine ulaştı ₺${fmtNum(tc.target)} — fiyat ₺${fmtNum(price)}`,
           color: '#2ea043',
           icon: '🎯',
           key: reachedKey,
@@ -599,7 +599,7 @@ function checkAlerts(data) {
         alerts.push({
           symbol,
           type: 'target_close',
-          message: `${symbol} is within 2% of ${tc.label} ₺${fmtNum(tc.target)} — price ₺${fmtNum(price)}`,
+          message: `${symbol} ${tc.label} ₺${fmtNum(tc.target)} hedefine %2 uzakta — fiyat ₺${fmtNum(price)}`,
           color: '#d29922',
           icon: '🔔',
           key: close2Key,
@@ -616,7 +616,7 @@ function checkAlerts(data) {
           alerts.push({
             symbol,
             type: 'target_near',
-            message: `${symbol} is within 5% of ${tc.label} ₺${fmtNum(tc.target)} — price ₺${fmtNum(price)}`,
+            message: `${symbol} ${tc.label} ₺${fmtNum(tc.target)} hedefine %5 uzakta — fiyat ₺${fmtNum(price)}`,
             color: '#58a6ff',
             icon: '📡',
             key: close5Key,
@@ -653,7 +653,7 @@ function buildAlertEmail(alerts) {
     <div style="background:#ffffff;border:1px solid #d0d0d0;">
       <div style="padding:20px 24px;border-bottom:2px solid #000;">
         <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin-bottom:6px;">StableX Insights</div>
-        <h1 style="margin:0;color:#000;font-size:20px;font-weight:700;letter-spacing:-0.02em;">Price Alert</h1>
+        <h1 style="margin:0;color:#000;font-size:20px;font-weight:700;letter-spacing:-0.02em;">Fiyat Uyarısı</h1>
         <p style="margin:4px 0 0;color:#555;font-size:12px;">${date} — ${time}</p>
       </div>
       <table style="width:100%;border-collapse:collapse;">${rows}</table>
@@ -680,16 +680,16 @@ async function sendAlertEmail(alerts) {
     const { error } = await resend.emails.send({
       from: RESEND_FROM_EMAIL,
       to: toEmails,
-      subject: `Price Alert — ${symbols}`,
+      subject: `Fiyat Uyarısı — ${symbols}`,
       html,
     })
     if (error) throw new Error(error.message)
 
     // Mark all alerts as sent
     for (const a of alerts) markSent(a.key)
-    console.log(`  Alert email sent to ${toEmails.join(', ')}: ${alerts.length} alert(s) for ${symbols}`)
+    console.log(`  Uyarı e-postası gönderildi (${toEmails.join(', ')}): ${symbols} için ${alerts.length} uyarı`)
   } catch (err) {
-    console.error('  Alert email failed:', err.message)
+    console.error('  Uyarı e-postası başarısız:', err.message)
   }
 }
 
@@ -699,11 +699,11 @@ async function runAlertCheck() {
     const data = await getDashboardData()
     const alerts = checkAlerts(data)
     if (alerts.length > 0) {
-      console.log(`  Found ${alerts.length} alert(s):`, alerts.map(a => a.message).join(' | '))
+      console.log(`  ${alerts.length} uyarı bulundu:`, alerts.map(a => a.message).join(' | '))
       await sendAlertEmail(alerts)
     }
   } catch (err) {
-    console.error('  Alert check error:', err.message)
+    console.error('  Uyarı kontrol hatası:', err.message)
   }
 }
 
@@ -713,10 +713,10 @@ let alertTimer = null
 
 function startAlertLoop() {
   if (!resend) {
-    console.log('  Alerts disabled — RESEND_API_KEY not set')
+    console.log('  Uyarılar devre dışı — RESEND_API_KEY ayarlanmamış')
     return
   }
-  console.log('  Price alert notifications enabled (checking every 2 min)')
+  console.log('  Fiyat uyarıları etkin (her 2 dakikada bir kontrol)')
   // Run first check after a short delay (let pg_cron populate fresh data first)
   setTimeout(() => {
     runAlertCheck()
@@ -813,38 +813,38 @@ const HTML = /*html*/ `<!DOCTYPE html>
 </style>
 </head>
 <body>
-  <h1>BIST Peak Tracker</h1>
-  <p class="subtitle">Peak prices, support tiers & position management — click any stock to configure</p>
+  <h1>BIST Pik Takibi</h1>
+  <p class="subtitle">Pik fiyatları, destek seviyeleri ve pozisyon yönetimi — yapılandırmak için hisseye tıklayın</p>
 
   <div class="controls">
-    <button class="btn btn-primary" id="refreshBtn">Refresh & Update Peaks</button>
-    <button class="btn" id="refreshQuotesBtn">Refresh Quotes</button>
-    <a class="btn" href="/api/export-excel" id="exportBtn">Export Excel</a>
-    <button class="btn" id="sendMailBtn">Send Snapshot</button>
+    <button class="btn btn-primary" id="refreshBtn">Yenile & Pikleri Güncelle</button>
+    <button class="btn" id="refreshQuotesBtn">Fiyatları Yenile</button>
+    <a class="btn" href="/api/export-excel" id="exportBtn">Excel'e Aktar</a>
+    <button class="btn" id="sendMailBtn">Özet Gönder</button>
     <span style="display:inline-flex;gap:4px;align-items:center;">
       <input id="addSymbolInput" type="text" placeholder="THYAO" style="padding:7px 10px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e1e4e8;font-size:0.9rem;width:100px;text-transform:uppercase;" />
-      <button class="btn btn-sm btn-primary" id="addStockBtn">+ Add</button>
+      <button class="btn btn-sm btn-primary" id="addStockBtn">+ Ekle</button>
     </span>
   </div>
-  <div id="status">Loading...</div>
+  <div id="status">Yükleniyor...</div>
 
   <table id="peakTable">
     <thead>
       <tr>
-        <th>Symbol</th>
-        <th>Price (&#8378;)</th>
-        <th>Cost (&#8378;)</th>
-        <th>Target 1 (&#8378;)</th>
-        <th>Target 2 (&#8378;)</th>
-        <th>Peak (&#8378;)</th>
-        <th>% from Peak</th>
-        <th>T1 -5% (&#8378;)</th>
-        <th>T2 -8% (&#8378;)</th>
-        <th>T3 -12% (&#8378;)</th>
+        <th>Sembol</th>
+        <th>Fiyat (&#8378;)</th>
+        <th>Maliyet (&#8378;)</th>
+        <th>Hedef 1 (&#8378;)</th>
+        <th>Hedef 2 (&#8378;)</th>
+        <th>Pik (&#8378;)</th>
+        <th>% Pikten</th>
+        <th>T1 -%5 (&#8378;)</th>
+        <th>T2 -%8 (&#8378;)</th>
+        <th>T3 -%12 (&#8378;)</th>
       </tr>
     </thead>
     <tbody id="peakBody">
-      <tr><td colspan="12" class="empty-msg">No stocks in portfolio — add one above</td></tr>
+      <tr><td colspan="12" class="empty-msg">Portföyde hisse yok — yukarıdan ekleyin</td></tr>
     </tbody>
   </table>
 
@@ -942,14 +942,14 @@ function renderPeakTable(data) {
     peakBody.innerHTML += '<tr class="stock-row ' + cls + '" data-symbol="' + d.symbol + '">'
       + '<td><span class="symbol">' + d.symbol + '</span>' + configDot + '</td>'
       + '<td>' + fmt(d.price) + '</td>'
-      + '<td>' + (d.cost ? fmt(d.cost) + pctFromCostTag(d.price, d.cost) : '<span style="color:#333">-</span>') + '</td>'
-      + '<td>' + (d.target1 ? fmt(d.target1) + pctToTargetTag(d.price, d.target1) : '<span style="color:#333">-</span>') + '</td>'
-      + '<td>' + (d.target2 ? fmt(d.target2) + pctToTargetTag(d.price, d.target2) : '<span style="color:#333">-</span>') + '</td>'
       + '<td class="' + pc + '">' + (d.peak != null ? fmt(d.peak) : '<span style="color:#333">-</span>') + '</td>'
       + '<td class="' + pc + '">' + (d.pctFromPeak != null ? pctTag(d.pctFromPeak) : '<span style="color:#333">-</span>') + '</td>'
       + '<td class="' + pc + '">' + (d.tier1 != null ? fmt(d.tier1) : '<span style="color:#333">-</span>') + '</td>'
       + '<td class="' + pc + '">' + (d.tier2 != null ? fmt(d.tier2) : '<span style="color:#333">-</span>') + '</td>'
       + '<td class="' + pc + '">' + (d.tier3 != null ? fmt(d.tier3) : '<span style="color:#333">-</span>') + '</td>'
+      + '<td>' + (d.cost ? fmt(d.cost) + pctFromCostTag(d.price, d.cost) : '<span style="color:#333">-</span>') + '</td>'
+      + '<td>' + (d.target1 ? fmt(d.target1) + pctToTargetTag(d.price, d.target1) : '<span style="color:#333">-</span>') + '</td>'
+      + '<td>' + (d.target2 ? fmt(d.target2) + pctToTargetTag(d.price, d.target2) : '<span style="color:#333">-</span>') + '</td>'
       + '</tr>';
 
     // Expandable config panel — shows all positions + add new form
@@ -982,26 +982,26 @@ function renderPeakTable(data) {
             + '</div>';
         }
       } else {
-        html += '<div style="margin-bottom:8px;font-size:0.85rem;color:#8b949e;">No positions yet — add one below</div>';
+        html += '<div style="margin-bottom:8px;font-size:0.85rem;color:#8b949e;">Henüz pozisyon yok — aşağıya ekleyin</div>';
       }
 
       // Add new position form
       html += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid #30363d;">'
-        + '<div style="font-size:0.82rem;color:#58a6ff;margin-bottom:8px;">New Position</div>'
+        + '<div style="font-size:0.82rem;color:#58a6ff;margin-bottom:8px;">Yeni Pozisyon</div>'
         + '<div class="config-panel" style="padding:0;">'
-        + '<div class="field"><label>Open Date</label>'
+        + '<div class="field"><label>Açılış Tarihi</label>'
         + '<input type="date" id="cfg-date-' + d.symbol + '" /></div>'
-        + '<div class="field"><label>Cost (&#8378;)</label>'
-        + '<input type="number" step="0.01" id="cfg-cost-' + d.symbol + '" placeholder="Entry price" /></div>'
-        + '<div class="field"><label>Target 1 (&#8378;)</label>'
-        + '<input type="number" step="0.01" id="cfg-t1-' + d.symbol + '" placeholder="First target" /></div>'
-        + '<div class="field"><label>Target 2 (&#8378;)</label>'
-        + '<input type="number" step="0.01" id="cfg-t2-' + d.symbol + '" placeholder="Higher target" /></div>'
+        + '<div class="field"><label>Maliyet (&#8378;)</label>'
+        + '<input type="number" step="0.01" id="cfg-cost-' + d.symbol + '" placeholder="Giriş fiyatı" /></div>'
+        + '<div class="field"><label>Hedef 1 (&#8378;)</label>'
+        + '<input type="number" step="0.01" id="cfg-t1-' + d.symbol + '" placeholder="İlk hedef" /></div>'
+        + '<div class="field"><label>Hedef 2 (&#8378;)</label>'
+        + '<input type="number" step="0.01" id="cfg-t2-' + d.symbol + '" placeholder="Yüksek hedef" /></div>'
         + '</div>'
         + '<div class="panel-actions" style="margin-top:8px;">'
-        + '<button class="btn btn-sm btn-primary" data-action="save-pos" data-sym="' + d.symbol + '">Add Position</button>'
-        + '<button class="btn btn-sm" data-action="refresh" data-sym="' + d.symbol + '">Refresh Quotes</button>'
-        + '<button class="btn btn-sm btn-danger" data-action="remove-stock" data-sym="' + d.symbol + '">Remove Stock</button>'
+        + '<button class="btn btn-sm btn-primary" data-action="save-pos" data-sym="' + d.symbol + '">Pozisyon Ekle</button>'
+        + '<button class="btn btn-sm" data-action="refresh" data-sym="' + d.symbol + '">Fiyatları Yenile</button>'
+        + '<button class="btn btn-sm btn-danger" data-action="remove-stock" data-sym="' + d.symbol + '">Hisseyi Kaldır</button>'
         + '</div></div>'
         + '</div></td></tr>';
 
@@ -1014,15 +1014,15 @@ function renderPeakTable(data) {
 
 async function updatePeaks() {
   refreshBtn.disabled = true;
-  status.textContent = 'Fetching quotes & updating peaks...';
+  status.textContent = 'Fiyatlar alınıyor & pikler güncelleniyor...';
   try {
     var res = await fetch('/api/update-peaks', { method: 'POST' });
     var json = await res.json();
     renderPeakTable(json.data);
-    status.textContent = (json.updated ? 'Peaks updated! ' : 'No new peaks. ')
-      + 'Last refresh: ' + new Date().toLocaleTimeString('tr-TR');
+    status.textContent = (json.updated ? 'Pikler güncellendi! ' : 'Yeni pik yok. ')
+      + 'Son yenileme: ' + new Date().toLocaleTimeString('tr-TR');
   } catch (e) {
-    status.textContent = 'Error: ' + e.message;
+    status.textContent = 'Hata: ' + e.message;
   }
   refreshBtn.disabled = false;
 }
@@ -1034,14 +1034,14 @@ async function savePosition(symbol) {
   var t2 = document.getElementById('cfg-t2-' + symbol).value.trim();
 
   if (!dateVal || cost === '') {
-    status.textContent = 'Open Date and Cost are required.';
+    status.textContent = 'Açılış tarihi ve maliyet zorunludur.';
     return;
   }
 
   // Find portfolio_stock_id from currentData
   var stock = currentData.find(function(d) { return d.symbol === symbol; });
   if (!stock || !stock.portfolioStockId) {
-    status.textContent = 'Error: stock not found in portfolio.';
+    status.textContent = 'Hata: hisse portföyde bulunamadı.';
     return;
   }
 
@@ -1049,7 +1049,7 @@ async function savePosition(symbol) {
   if (t1 !== '') payload.target1 = parseFloat(t1);
   if (t2 !== '') payload.target2 = parseFloat(t2);
 
-  status.textContent = 'Adding position for ' + symbol + '...';
+  status.textContent = symbol + ' için pozisyon ekleniyor...';
   try {
     var res = await fetch('/api/position', {
       method: 'POST',
@@ -1058,50 +1058,50 @@ async function savePosition(symbol) {
     });
     var json = await res.json();
     if (json.error) {
-      status.textContent = 'Save error: ' + json.error;
+      status.textContent = 'Kaydetme hatası: ' + json.error;
     } else {
-      status.textContent = symbol + ' position added.';
+      status.textContent = symbol + ' pozisyonu eklendi.';
       await refreshView();
     }
   } catch (e) {
-    status.textContent = 'Save error: ' + e.message;
+    status.textContent = 'Kaydetme hatası: ' + e.message;
   }
 }
 
 async function refreshQuotes() {
-  status.textContent = 'Refreshing quotes from edge function...';
+  status.textContent = 'Fiyatlar yenileniyor...';
   try {
     var res = await fetch('/api/refresh', { method: 'POST' });
     var json = await res.json();
-    status.textContent = 'Quotes refreshed: ' + (json.updated || 0) + ' stocks updated.';
+    status.textContent = 'Fiyatlar yenilendi: ' + (json.updated || 0) + ' hisse güncellendi.';
     await refreshView();
   } catch (e) {
-    status.textContent = 'Refresh error: ' + e.message;
+    status.textContent = 'Yenileme hatası: ' + e.message;
   }
 }
 
 async function deletePosition(posId) {
-  if (!confirm('Delete this position?')) return;
-  status.textContent = 'Deleting position...';
+  if (!confirm('Bu pozisyonu silmek istediğinizden emin misiniz?')) return;
+  status.textContent = 'Pozisyon siliniyor...';
   try {
     await fetch('/api/position/' + posId, { method: 'DELETE' });
-    status.textContent = 'Position deleted.';
+    status.textContent = 'Pozisyon silindi.';
     await refreshView();
   } catch (e) {
-    status.textContent = 'Delete error: ' + e.message;
+    status.textContent = 'Silme hatası: ' + e.message;
   }
 }
 
 async function removeStock(sym) {
-  if (!confirm('Remove ' + sym + ' and all its positions from portfolio?')) return;
-  status.textContent = 'Removing ' + sym + '...';
+  if (!confirm(sym + ' ve tüm pozisyonlarını portföyden kaldırmak istediğinizden emin misiniz?')) return;
+  status.textContent = sym + ' kaldırılıyor...';
   try {
     await fetch('/api/stock/' + sym, { method: 'DELETE' });
     expandedSymbol = null;
-    status.textContent = sym + ' removed.';
+    status.textContent = sym + ' kaldırıldı.';
     await refreshView();
   } catch (e) {
-    status.textContent = 'Remove error: ' + e.message;
+    status.textContent = 'Kaldırma hatası: ' + e.message;
   }
 }
 
@@ -1117,7 +1117,7 @@ async function addStock() {
   var input = document.getElementById('addSymbolInput');
   var sym = input.value.trim().toUpperCase();
   if (!sym) return;
-  status.textContent = 'Adding ' + sym + '...';
+  status.textContent = sym + ' ekleniyor...';
   try {
     var res = await fetch('/api/add-stock', {
       method: 'POST',
@@ -1126,15 +1126,15 @@ async function addStock() {
     });
     var json = await res.json();
     if (json.error) {
-      status.textContent = 'Error: ' + json.error;
+      status.textContent = 'Hata: ' + json.error;
       return;
     }
     input.value = '';
     expandedSymbol = sym;
     await refreshView();
-    status.textContent = sym + ' added — configure positions below.';
+    status.textContent = sym + ' eklendi — aşağıda pozisyon tanımlayın.';
   } catch (e) {
-    status.textContent = 'Error adding stock: ' + e.message;
+    status.textContent = 'Hisse ekleme hatası: ' + e.message;
   }
 }
 
@@ -1174,20 +1174,20 @@ document.getElementById('addStockBtn').addEventListener('click', function() { ad
 document.getElementById('sendMailBtn').addEventListener('click', async function() {
   var btn = this;
   btn.disabled = true;
-  btn.textContent = 'Sending...';
+  btn.textContent = 'Gönderiliyor...';
   try {
     var res = await fetch('/api/send-snapshot', { method: 'POST' });
     var json = await res.json();
     if (json.error) {
-      status.textContent = 'Mail error: ' + json.error;
+      status.textContent = 'Mail hatası: ' + json.error;
     } else {
-      status.textContent = 'Snapshot sent to ' + json.to;
+      status.textContent = 'Özet gönderildi: ' + json.to;
     }
   } catch (e) {
-    status.textContent = 'Mail error: ' + e.message;
+    status.textContent = 'Mail hatası: ' + e.message;
   }
   btn.disabled = false;
-  btn.textContent = 'Send Snapshot';
+  btn.textContent = 'Özet Gönder';
 });
 document.getElementById('addSymbolInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') addStock();
